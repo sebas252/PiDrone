@@ -59,27 +59,16 @@ def Flight_Data(Throttle):
 	#Throttle = [GM1*Power,GM2*Power,GM3*Power,GM4*Power] #M1/M2/M3/M4
 	print("Potencia Actual de los Motores:\t\t[" + str(Throttle[0]) + "," + str(Throttle[1]) + "," + str(Throttle[2]) + "," + str(Throttle[3]) + "]\n")
 
+#def Flight():
+#Roll hacia la Derecha:			Valores Positivos.
+#Roll hacia la Izquierda:		Valores Negativos.
+#Pitch hacia Atras (Inclinar Nariz):	Valores Positivos.
+#Pitch hacia Adelante (Declinar Nariz):	Valores Negativos.
+
+
+
 while True:
-	try:
-		#Altitude = readAltitude()		
-		#Height = Altitude - float(auxAlt)
-		#print("Altura Actual: " + str(Altitude)) 
-		#board.getData(MultiWii.RAW_IMU)
-		#print("\n\t\t\tDatos de Vuelo:")
-		#print("Lectura Actual del Acelerometro:\tX: " + str(board.rawIMU['ax']) + " Y: " + str(board.rawIMU['ay']) + " Z: " + str(board.rawIMU['az']))
-		#board.getData(MultiWii.ATTITUDE)
-		#print("Orientacion de Vuelo:\t\t\tPitch: " + str(board.attitude['angx']) + " Roll: " + str(board.attitude['angy']))
-		#print("Lectura del Giroscopio:")
-		#print("X: " + str(board.rawIMU['gx']) + " Y: " + str(board.rawIMU['gy']) + " Z: " + str(board.rawIMU['gz']))
-		#ROLL/PITCH/YAW/THROTTLE/AUX1/AUX2 -> Receptor de 6 canales.
-		#M4(CW)-M2(CCW)                                           
-		#      ^                                          		
-		#M3(CCW)-M1(CW) Configuracion en X
-		#print("Altura:" + str(Height) + " m\n")
-		#print("Ganancia Actual de los Motores:\t\t[" + str(GM1) + "," + str(GM2) + "," + str(GM3) + "," + str(GM4) + "]")
-		#Asignar Potencia a los Motores
-		#Throttle = [GM1*Power,GM2*Power,GM3*Power,GM4*Power] #M1/M2/M3/M4			
-		#print("Potencia Actual de los Motores:\t\t[" + str(Throttle[0]) + "," + str(Throttle[1]) + "," + str(Throttle[2]) + "," + str(Throttle[3]) + "]\n")
+	try:      	                                    		
 		Throttle = [GM1*Power,GM2*Power,GM3*Power,GM4*Power] #M1/M2/M3/M4
 		Flight_Data(Throttle)
 		#Aceleracion de los Motores
