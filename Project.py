@@ -34,8 +34,15 @@ GM3 = float(Ganancias.GM3)
 GM4 = float(Ganancias.GM4)
 File.close
 
+G_M1 = GM1
+G_M2 = GM2
+G_M3 = GM3
+G_M4 = GM4
+
 #Potencia General Inicial de Motores
 Power = int(input("Digite un Valor de Potencia para los Motores entre [1000-2000]: "))
+armPower = 1090
+flightPower = 1090
 #Ganancia Unitaria Individual de los Motores
 #print("La Ganancia Inicial de los Motores sera igual a 1")
 #GM1,GM2,GM3,GM4 = 1,1,1,1
@@ -59,17 +66,50 @@ def Flight_Data(Throttle):
 	#Throttle = [GM1*Power,GM2*Power,GM3*Power,GM4*Power] #M1/M2/M3/M4
 	print("Potencia Actual de los Motores:\t\t[" + str(Throttle[0]) + "," + str(Throttle[1]) + "," + str(Throttle[2]) + "," + str(Throttle[3]) + "]\n")
 
-#def Flight():
+def Leveled_Flight(armPower,Power,GM1,GM2,GM3,GM4):
 #Roll hacia la Derecha:			Valores Positivos.
 #Roll hacia la Izquierda:		Valores Negativos.
 #Pitch hacia Atras (Inclinar Nariz):	Valores Positivos.
 #Pitch hacia Adelante (Declinar Nariz):	Valores Negativos.
+	board.getData(MultiWii.ATTITUDE)
+	Pitch = board.attitude['angx']
+	Roll = board.attitude['angy']
+	idealPitch = 0
+	idealRoll = 0
+	if armPower <= Power:
+		if Pitch > idealPitch:
+			GM2 -= 5
+			GM4 -= 5
+	
+		elif Pitch < idealPitch:
+			GM2 += 5
+			GM4 += 5
+	
+		elif Roll > idealRoll:
+			GM1 += 5
+			GM2 += 5
 
-
+		elif Roll < idealRoll:
+			GM3 += 5
+			GM4 += 5
+	
+		elif Pitch == idealPitch:
+			pass
+	
+		elif Roll == idealRoll:
+			pass
+	armPower += 20
+	return armPower,GM1,GM2,GM3,GM4
+	
+	else:
+		armPower -=20
+		return armPower,GM1,GM2,GM3,GM4
 
 while True:
-	try:      	                                    		
-		Throttle = [GM1*Power,GM2*Power,GM3*Power,GM4*Power] #M1/M2/M3/M4
+	try:  	                                    		
+		flightPower,G_M1,G_M2,G_M3,G_M4 = Leveled_Flight(armPower,Power,GM1,GM2,GM3,GM4)
+		GM1,GM2,GM3,GM4 = G_M1,G_M2,G_M3,G_M4
+		Throttle = [G_M1*flightPower,G_M2*flightPower,G_M3*flightPower,G_M4*flightPower] #M1/M2/M3/M4
 		Flight_Data(Throttle)
 		#Aceleracion de los Motores
 		board.sendCMD(8,SET_MOTOR,Throttle)
