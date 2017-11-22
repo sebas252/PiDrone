@@ -1,6 +1,6 @@
 import time
 from pymultiwii import MultiWii
-from bme280 import readAltitude
+#from bme280 import readAltitude
 import Ganancias
 
 SET_MOTOR = 214
@@ -34,15 +34,14 @@ GM3 = float(Ganancias.GM3)
 GM4 = float(Ganancias.GM4)
 File.close
 
-G_M1 = GM1
-G_M2 = GM2
-G_M3 = GM3
-G_M4 = GM4
+#G_M1 = GM1
+#G_M2 = GM2
+#G_M3 = GM3
+#G_M4 = GM4
 
 #Potencia General Inicial de Motores
-Power = int(input("Digite un Valor de Potencia para los Motores entre [1000-2000]: "))
-armPower = 1090
-flightPower = 1090
+Power = float(input("Digite un Valor de Potencia para los Motores entre [1000-2000]: "))
+armPower = 1080
 #Ganancia Unitaria Individual de los Motores
 #print("La Ganancia Inicial de los Motores sera igual a 1")
 #GM1,GM2,GM3,GM4 = 1,1,1,1
@@ -66,7 +65,7 @@ def Flight_Data(Throttle):
 	#Throttle = [GM1*Power,GM2*Power,GM3*Power,GM4*Power] #M1/M2/M3/M4
 	print("Potencia Actual de los Motores:\t\t[" + str(Throttle[0]) + "," + str(Throttle[1]) + "," + str(Throttle[2]) + "," + str(Throttle[3]) + "]\n")
 
-def Leveled_Flight(armPower,Power,GM1,GM2,GM3,GM4):
+def Leveled_Flight(actualPower,desiredPower,GainM1,GainM2,GainM3,GainM4):
 #Roll hacia la Derecha:			Valores Positivos.
 #Roll hacia la Izquierda:		Valores Negativos.
 #Pitch hacia Atras (Inclinar Nariz):	Valores Positivos.
@@ -76,53 +75,117 @@ def Leveled_Flight(armPower,Power,GM1,GM2,GM3,GM4):
 	Roll = board.attitude['angy']
 	idealPitch = 0
 	idealRoll = 0
-	if armPower <= Power:
+	G_M1,G_M2,G_M3,G_M4 = GainM1,GainM2,GainM3,GainM4
+	#Valores Recomendables para la Realimentacion y la Compensacion [0.001-0.1]
+	Realim = 0.004
+	Comp = 0.008
+
+	if actualPower < desiredPower:
 		if Pitch > idealPitch:
-			GM2 -= 5
-			GM4 -= 5
+			#Realimentacion
+			G_M2 -= Realim
+			G_M4 -= Realim
+			#Compensacion
+			G_M1 += Comp
+			G_M3 += Comp
 	
 		elif Pitch < idealPitch:
-			GM2 += 5
-			GM4 += 5
+			#Realimentacion
+			G_M1 -= Realim
+			G_M3 -= Realim
+			#Compensacion
+			G_M2 += Comp
+			G_M4 += Comp
 	
 		elif Roll > idealRoll:
-			GM1 += 5
-			GM2 += 5
+			#Realimentacion
+			G_M3 -= Realim
+			G_M4 -= Realim
+			#Compensacion
+			G_M1 += Comp
+			G_M2 += Comp
 
 		elif Roll < idealRoll:
-			GM3 += 5
-			GM4 += 5
+			#Realimentacion
+			G_M1 -= Realim
+			G_M2 -= Realim
+			#Compensacion
+			G_M3 += Comp
+			G_M4 += Comp
 	
 		elif Pitch == idealPitch:
 			pass
 	
 		elif Roll == idealRoll:
 			pass
-	armPower += 20
-	return armPower,GM1,GM2,GM3,GM4
 	
+		actualPower += 5
+		return actualPower,G_M1,G_M2,G_M3,G_M4
+	
+	elif actualPower == desiredPower:
+		actualPower += 3
+		return actualPower,G_M1,G_M2,G_M3,G_M4
+
 	else:
-		armPower -=20
-		return armPower,GM1,GM2,GM3,GM4
+		if Pitch > idealPitch:
+                        #Realimentacion
+                        G_M2 -= Realim
+                        G_M4 -= Realim
+                        #Compensacion
+                        G_M1 += Comp
+                        G_M3 += Comp
+
+                elif Pitch < idealPitch:
+                        #Realimentacion
+                        G_M1 -= Realim
+                        G_M3 -= Realim
+                        #Compensacion
+                        G_M2 += Comp
+                        G_M4 += Comp
+
+                elif Roll > idealRoll:
+                        #Realimentacion
+                        G_M3 -= Realim
+                        G_M4 -= Realim
+                        #Compensacion
+                        G_M1 += Comp
+                        G_M2 += Comp
+		
+		elif Roll < idealRoll:
+                        #Realimentacion
+                        G_M1 -= Realim
+                        G_M2 -= Realim
+                        #Compensacion
+                        G_M3 += Comp
+                        G_M4 += Comp
+
+                elif Pitch == idealPitch:
+                        pass
+
+                elif Roll == idealRoll:
+                        pass
+		
+		actualPower -= 5
+		return actualPower,G_M1,G_M2,G_M3,G_M4
 
 while True:
 	try:  	                                    		
-		flightPower,G_M1,G_M2,G_M3,G_M4 = Leveled_Flight(armPower,Power,GM1,GM2,GM3,GM4)
-		GM1,GM2,GM3,GM4 = G_M1,G_M2,G_M3,G_M4
-		Throttle = [G_M1*flightPower,G_M2*flightPower,G_M3*flightPower,G_M4*flightPower] #M1/M2/M3/M4
+		flightPower,GM1,GM2,GM3,GM4 = Leveled_Flight(armPower,Power,GM1,GM2,GM3,GM4)
+		armPower = flightPower
+		Throttle = [GM1*flightPower,GM2*flightPower,GM3*flightPower,GM4*flightPower] #M1/M2/M3/M4
 		Flight_Data(Throttle)
 		#Aceleracion de los Motores
 		board.sendCMD(8,SET_MOTOR,Throttle)
         	#Modificar Ganancia de los Motores
-		Mod_Gain = raw_input("Desea Cambiar la Ganancia de los Motores?  Y/N: ")
-                if Mod_Gain == 'Y':
-        	        print("Digite un Valor entre 0-100%: ")
-                	GM1 = (float(input("Asignar Ganancia del Motor 1: "))/100)
-                        GM2 = (float(input("Asignar Ganancia del Motor 2: "))/100)
-                        GM3 = (float(input("Asignar Ganancia del Motor 3: "))/100)
-                        GM4 = (float(input("Asignar Ganancia del Motor 4: "))/100)
-                else:
-                        pass
+		#Mod_Gain = raw_input("Desea Cambiar la Ganancia de los Motores?  Y/N: ")
+                #if Mod_Gain == 'Y':
+        	#       print("Digite un Valor entre 0-100%: ")
+                #	GM1 = (float(input("Asignar Ganancia del Motor 1: "))/100)
+                #       GM2 = (float(input("Asignar Ganancia del Motor 2: "))/100)
+                #       GM3 = (float(input("Asignar Ganancia del Motor 3: "))/100)
+                #       GM4 = (float(input("Asignar Ganancia del Motor 4: "))/100)
+                #else:
+                #       pass
 		Mod_Power = raw_input("Desea Modificar la Potencia General de los Motores? Y/N: ")
 		if Mod_Power == 'Y':
 			Power = float(input("Digite con Precaucion un valor entre [1000-2000]: "))
@@ -134,7 +197,10 @@ while True:
 		board.sendCMD(8,SET_MOTOR,Throttle)
 		#Almacenamiento de Cambios en Ganancias
 		File = open("Ganancias.py", "w")
-		File.write("GM1 = " + str(GM1) + "\nGM2 = " + str(GM2) + "\nGM3 = " + str(GM3) + "\nGM4 = " + str(GM4) + "\n")
+		#File.write("GM1 = " + str(GM1) + "\nGM2 = " + str(GM2) + "\nGM3 = " + str(GM3) + "\nGM4 = " + str(GM4) + "\n")
+		#Reinicializacion de las Ganancias
+		File.write("GM1 = 1\nGM2 = 1\nGM3 = 1\nGM4 = 1\n")
 		File.close
-		print("\nGanancias Almacenadas Correctamente en el Archivo Ganancias.py\n")
+		#print("\nGanancias Almacenadas Correctamente en el Archivo Ganancias.py\n")
+		print("\nGanancias Reinicializadas\n")
 		break
